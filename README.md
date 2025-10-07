@@ -4,14 +4,16 @@
 
 ## Quick Start
 
-### Install dependency
+### Run in locl
 
 ```bash
 git clone
 pnpm install
+pnpm run dev
 ```
+will serve at http://localhost:$PORT
 
-## Run in docker
+## Run with docker
 put environment file (.mcp.env) in work dir
 
 ```shell
