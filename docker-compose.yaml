@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   app:
     image: mediawiki-mcp:v1.0
@@ -13,3 +12,7 @@ services:
       - traefik.http.routers.wikichat.service=wikichat
       - traefik.http.services.wikichat.loadbalancer.server.port=18080
       - traefik.http.routers.wikichat.tls.certresolver=cloudflare
+
+networks:
+  proxy:
+    external: true
