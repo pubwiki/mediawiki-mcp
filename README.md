@@ -4,10 +4,9 @@
 
 ## Quick Start
 
-### Installation
+### Install dependency
 
 ```bash
-# Install globally
 git clone
 pnpm install
 ```
