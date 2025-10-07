@@ -1,0 +1,64 @@
+{
+	"name": "@miroslaw.franek/mediawiki-mcp-server-auth",
+	"version": "1.0.1",
+	"description": "MediaWiki MCP Server with Username/Password Authentication - Modified version supporting session-based authentication",
+	"keywords": [
+		"modelcontextprotocol",
+		"mcp",
+		"mediawiki",
+		"authentication",
+		"session-based",
+		"username-password"
+	],
+	"homepage": "https://github.com/miroslawfranek/MediaWiki-MCP-Server-Auth",
+	"bugs": {
+		"url": "https://github.com/miroslawfranek/MediaWiki-MCP-Server-Auth/issues"
+	},
+	"license": "GPL-2.0-or-later",
+	"author": {
+		"name": "Open-E",
+		"url": "https://www.open-e.com"
+	},
+	"type": "module",
+	"files": [
+		"dist"
+	],
+	"main": "dist/index.js",
+	"bin": {
+		"mediawiki-mcp-server-auth": "dist/index.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/miroslawfranek/MediaWiki-MCP-Server-Auth.git"
+	},
+	"scripts": {
+		"build": "tsc",
+		"watch": "tsc --watch",
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"lint": "eslint --cache src/**/*",
+		"start": "npx dotenv-cli -e .mcp.env -- node dist/index.js",
+		"start:streamableHttp": "MCP_TRANSPORT=http node dist/index.js",
+		"dev": "concurrently --kill-others \"tsc --watch\" \"npx -y @modelcontextprotocol/inspector@latest node dist/index.js\"",
+		"dev:streamableHttp": "concurrently --kill-others \"tsc --watch\" \"npx -y @modelcontextprotocol/inspector@latest\" \"MCP_TRANSPORT=http node dist/index.js\""
+	},
+	"dependencies": {
+		"@aws-sdk/client-s3": "^3.896.0",
+		"@aws-sdk/s3-request-presigner": "^3.896.0",
+		"@modelcontextprotocol/sdk": "^1.11.3",
+		"express": "^5.1.0",
+		"form-data": "^4.0.4",
+		"node-fetch": "^3.3.2",
+		"zod": "^3.23.8"
+	},
+	"devDependencies": {
+		"@types/express": "^5.0.2",
+		"@types/node": "^22.15.17",
+		"@types/node-fetch": "^2.6.12",
+		"@typescript-eslint/eslint-plugin": "^8.18.0",
+		"@typescript-eslint/parser": "^8.18.0",
+		"concurrently": "^9.1.2",
+		"dotenv-cli": "^10.0.0",
+		"eslint": "^9.17.0",
+		"typescript": "^5.8.3"
+	}
+}

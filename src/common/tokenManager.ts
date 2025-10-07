@@ -1,0 +1,123 @@
+import { USER_AGENT } from "../server.js";
+
+type TokenRecord = {
+  token: string;
+  cookie: string;
+  fetchedAt: number; // 时间戳（毫秒）
+};
+
+interface EditTokenResponse {
+	query: {
+		tokens: {
+			csrftoken: string;
+		};
+	};
+}
+
+function getRetCookie(setCookieHeaders: string[] | string | null,cookies:string[]){
+	if (!setCookieHeaders) return cookies;
+
+	const cookiesArray = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+
+	for (const cookieString of cookiesArray) {
+		const cookie = cookieString.split(';')[0]; 
+		const [name] = cookie.split('=');
+
+		cookies = cookies.filter(c => !c.startsWith(name + '='));
+		cookies.push(cookie);
+	}
+    return cookies
+}
+
+export class TokenManager {
+  private tokens: Map<string, TokenRecord> = new Map();
+  private readonly EXPIRATION =  20 * 60 * 1000; // 20 min
+
+
+  private buildKey(server: string, username: string): string {
+    return `${server}::${username}`;
+  }
+
+  async fetchToken(server: string, username: string, cookie: string):Promise<[string|null,string|null]>{
+    try {
+		const response0 = await fetch(`${server}api.php`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'User-Agent': USER_AGENT,
+				'Cookie': cookie
+			},
+			body: new URLSearchParams({
+				action: 'query',
+				meta: 'tokens',
+				format: 'json'
+			})
+		});
+
+		if (!response0.ok) {
+			throw new Error(`HTTP error! status: ${response0.status}`);
+		}
+
+        const cookies = getRetCookie(response0.headers.getSetCookie(),[]).join("; ")
+
+        const response = await fetch(`${server}api.php`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded',
+				'User-Agent': USER_AGENT,
+				'Cookie': cookies
+			},
+			body: new URLSearchParams({
+				action: 'query',
+				meta: 'tokens',
+				format: 'json'
+			})
+		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
+		const data = await response.json() as EditTokenResponse;
+		return [data.query?.tokens?.csrftoken || null,cookies];
+	} catch (error) {
+		console.error('Error getting edit token:', error);
+		return [null,null];
+	}
+  }
+
+  /**
+   * 获取 Token
+   */
+  async getToken(server: string, cookie: string): Promise<[string|null,string|null]> {
+
+    const username = cookie
+        .split("; ")
+        .map(item => item.split("="))
+        .find(([key]) => key.endsWith("UserName"))?.[1] || null;
+    
+    if(!username){
+        throw new Error(`Cannot get username from cookie: ${cookie}`)
+    }
+
+    const key = this.buildKey(server, username);
+    const record = this.tokens.get(key);
+
+    if (record) {
+      const now = Date.now();
+      const age = now - record.fetchedAt;
+      if (age < this.EXPIRATION) {
+        return [record.token,record.cookie]; // 未过期，直接返回
+      }
+    }
+
+    // 过期或不存在，重新获取
+    const newToken = await this.fetchToken(server, username, cookie);
+    if(newToken[0]&&newToken[1]){
+        this.tokens.set(key, { token: newToken[0], fetchedAt: Date.now(),cookie:newToken[1]});
+    }
+    return [newToken[0],newToken[1]];
+  }
+}
+
+export const tokenManager = new TokenManager()
