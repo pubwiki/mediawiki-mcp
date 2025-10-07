@@ -13,7 +13,7 @@ pnpm run dev
 ```
 will serve at http://localhost:$PORT
 
-## Run with docker
+### Run with docker
 put environment file (.mcp.env) in work dir
 
 ```shell
