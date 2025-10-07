@@ -9,7 +9,8 @@
 ```bash
 git clone
 pnpm install
-pnpm run dev
+pnpm run build
+pnpm run start
 ```
 will serve at http://localhost:$PORT
 
@@ -119,10 +120,5 @@ async function test() {
       ],
     });
 }
-```
-
-### Usage
-```bash
-pnpm run start
 ```
 
