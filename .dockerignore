@@ -6,4 +6,3 @@ Dockerfile
 docker-compose.yaml
 *.log
 *.md
-.mcp.env
