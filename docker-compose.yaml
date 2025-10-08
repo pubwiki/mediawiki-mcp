@@ -7,11 +7,11 @@ services:
       - proxy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.wikichat.rule=Host(`chat.pub.wiki`)
-      - traefik.http.routers.wikichat.entrypoints=websecure
-      - traefik.http.routers.wikichat.service=wikichat
-      - traefik.http.services.wikichat.loadbalancer.server.port=18080
-      - traefik.http.routers.wikichat.tls.certresolver=cloudflare
+      - traefik.http.routers.wikimcp.rule=Host(`mcp.pub.wiki`)
+      - traefik.http.routers.wikimcp.entrypoints=websecure
+      - traefik.http.routers.wikimcp.service=wikimcp
+      - traefik.http.services.wikimcp.loadbalancer.server.port=18080
+      - traefik.http.routers.wikimcp.tls.certresolver=cloudflare
 
 networks:
   proxy:
