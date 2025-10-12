@@ -90,7 +90,7 @@ function getPageToolResult(result: MwRestApiPageObject, sections: string[]): Tex
 			text: [
 				`Page ID: ${result.id}`,
 				`Title: ${result.title}`,
-				`Sections: ${sections.map((s,i)=>`${s}[index:${i}]`).join(', ')}`
+				`Sections: ${sections.map((s,i)=>`${s}[index:${i+1}]`).join(', ')}`
 			].join('\n')
 		}
 	];
