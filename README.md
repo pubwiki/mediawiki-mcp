@@ -4,15 +4,17 @@
 
 ## Quick Start
 
-### Installation
+### Run in locl
 
 ```bash
-# Install globally
 git clone
 pnpm install
+pnpm run build
+pnpm run start
 ```
+will serve at http://localhost:$PORT
 
-## Run in docker
+### Run with docker
 put environment file (.mcp.env) in work dir
 
 ```shell
@@ -118,10 +120,5 @@ async function test() {
       ],
     });
 }
-```
-
-### Usage
-```bash
-pnpm run start
 ```
 

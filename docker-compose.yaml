@@ -1,8 +1,18 @@
-version: "3.9"
 services:
   app:
-    build: .
+    image: mediawiki-mcp:v1.0
     env_file:
       - .mcp.env
-    ports:
-      - "18080:18080"
+    networks:
+      - proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.wikimcp.rule=Host(`mcp.pub.wiki`)
+      - traefik.http.routers.wikimcp.entrypoints=websecure
+      - traefik.http.routers.wikimcp.service=wikimcp
+      - traefik.http.services.wikimcp.loadbalancer.server.port=18080
+      - traefik.http.routers.wikimcp.tls.certresolver=cloudflare
+
+networks:
+  proxy:
+    external: true
