@@ -9,6 +9,22 @@ import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 import { createServer } from './server.js';
 
 const app = express();
+
+// Enable CORS for all origins
+app.use( ( req, res, next ) => {
+	res.header( 'Access-Control-Allow-Origin', '*' );
+	res.header( 'Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS' );
+	res.header( 'Access-Control-Allow-Headers', 'Content-Type, mcp-session-id' );
+	
+	// Handle preflight requests
+	if ( req.method === 'OPTIONS' ) {
+		res.sendStatus( 200 );
+		return;
+	}
+	
+	next();
+} );
+
 app.use( express.json() );
 
 const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
