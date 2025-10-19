@@ -32,6 +32,7 @@ const transports: { [sessionId: string]: StreamableHTTPServerTransport } = {};
 app.post( '/mcp', async ( req: Request, res: Response ) => {
 	const sessionId = req.headers[ 'mcp-session-id' ] as string | undefined;
 	let transport: StreamableHTTPServerTransport;
+	res.setHeader("Access-Control-Expose-Headers", "mcp-session-id");
 
 	if ( sessionId && transports[ sessionId ] ) {
 		transport = transports[ sessionId ];
