@@ -12,6 +12,8 @@ import { setTargetWikiTool } from './submit.js';
 import { listAllPageTitlesTool } from './list-all-pages-titles.js';
 import { uploadImageTool } from './upload-image.js';
 import { createImageAndUploadToDO } from './create-image-and-upload.js';
+import { batchUpdatePageTool } from './batch-update-page.js';
+import { batchCreatePageTool } from './batch-create-page.js';
 
 const toolRegistrars = [
 	getPageTool,
@@ -23,8 +25,10 @@ const toolRegistrars = [
 	listAllPageTitlesTool,
 	//setWikiTool,
 	updatePageTool,
+	batchUpdatePageTool,
 	getFileTool,
 	createPageTool,
+	batchCreatePageTool,
 	uploadImageTool,
 	setTargetWikiTool,
 	
