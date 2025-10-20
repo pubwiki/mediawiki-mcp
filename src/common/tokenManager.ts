@@ -1,4 +1,5 @@
 import { USER_AGENT } from "../server.js";
+import { createHash } from "crypto";
 
 type TokenRecord = {
   token: string;
@@ -34,11 +35,12 @@ export class TokenManager {
   private readonly EXPIRATION =  20 * 60 * 1000; // 20 min
 
 
-  private buildKey(server: string, username: string): string {
-    return `${server}::${username}`;
+  private buildKey(server: string, cookie: string): string {
+    const hash = createHash('sha256').update(`${server}::${cookie}`).digest('hex');
+    return hash;
   }
 
-  async fetchToken(server: string, username: string, cookie: string):Promise<[string|null,string|null]>{
+  async fetchToken(server: string, cookie: string):Promise<[string|null,string|null]>{
     try {
 		const response0 = await fetch(`${server}api.php`, {
 			method: 'POST',
@@ -90,17 +92,7 @@ export class TokenManager {
    * 获取 Token
    */
   async getToken(server: string, cookie: string): Promise<[string|null,string|null]> {
-
-    const username = cookie
-        .split("; ")
-        .map(item => item.split("="))
-        .find(([key]) => key.endsWith("UserName"))?.[1] || null;
-    
-    if(!username){
-        throw new Error(`Cannot get username from cookie: ${cookie}`)
-    }
-
-    const key = this.buildKey(server, username);
+    const key = this.buildKey(server, cookie);
     const record = this.tokens.get(key);
 
     if (record) {
@@ -112,7 +104,7 @@ export class TokenManager {
     }
 
     // 过期或不存在，重新获取
-    const newToken = await this.fetchToken(server, username, cookie);
+    const newToken = await this.fetchToken(server, cookie);
     if(newToken[0]&&newToken[1]){
         this.tokens.set(key, { token: newToken[0], fetchedAt: Date.now(),cookie:newToken[1]});
     }
