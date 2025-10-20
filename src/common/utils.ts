@@ -123,9 +123,10 @@ export async function makeRestPostRequest<T>(
 			'Content-Type': 'application/json',
 			...appendHeaders
 		};
-		
-		
-		const response = await fetchCore( `${ wikiServer }${ path }`, {
+		const serverUrl = new URL(wikiServer);
+		const baseUrl = `${serverUrl.protocol}//${serverUrl.host}`;
+
+		const response = await fetchCore( `${ baseUrl }${ path }`, {
 			headers: headers,
 			method: 'POST',
 			body: body
