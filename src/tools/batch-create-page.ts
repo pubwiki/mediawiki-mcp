@@ -71,16 +71,14 @@ async function handleBatchCreatePageTool(
 
 	try {
 		let [cookies] = getReqHeaders(req);
-		const token = await tokenManager.getToken(server, cookies);
-
-		if (!token[0]) {
-			throw new Error(`Cannot fetch token with cookie: ${cookies}`);
+		let {csrftoken,cookies:newCookies } = await tokenManager.getToken(server,cookies)
+		if(!csrftoken){
+			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
 		}
-		if (token[1]) {
-			cookies = token[1];
+		if(newCookies){
+			cookies = newCookies;
 		}
 
-		// Process each page sequentially to avoid rate limiting
 		for (const page of pages) {
 			try {
 				const data: MwActionEditResponse = await makeSessionApiRequest(
@@ -89,9 +87,8 @@ async function handleBatchCreatePageTool(
 						title: page.title,
 						text: page.source,
 						summary: page.comment || 'Created via MCP (batch)',
-						createonly: 'true', // This ensures we only create, not update existing
 						contentmodel: page.contentModel || EditContentFormat.wikitext,
-						token: token[0],
+						token: csrftoken,
 						format: 'json'
 					},
 					server,

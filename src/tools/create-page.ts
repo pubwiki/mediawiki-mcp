@@ -40,17 +40,13 @@ async function handleCreatePageTool(
 	let data: any = null;
 	try {
 		let [cookies] = getReqHeaders(req);
-		const token = await tokenManager.getToken(server,cookies)
-		if(!token[0]){
+		let {csrftoken,cookies:newCookies } = await tokenManager.getToken(server,cookies)
+		if(!csrftoken){
 			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
 		}
-		if(token[1]){
-			cookies = token[1]
+		if(newCookies){
+			cookies = newCookies;
 		}
-
-		console.log("Source: ", source);
-		//throw new Error(`get token with cookie: ${cookies} result ${token}`)
-		// Use session-based API with edit action (which can create pages)
 		data = await makeSessionApiRequest( {
 			action: 'edit',
 			title: title,
@@ -58,7 +54,7 @@ async function handleCreatePageTool(
 			summary: comment || 'Created via MCP',
 			createonly: 'true', // This ensures we only create, not update existing
 			contentmodel: contentModel || 'wikitext',
-			token:token[0],
+			token: csrftoken,
 			format: 'json'
 		},server,{"Cookie":cookies});
 		

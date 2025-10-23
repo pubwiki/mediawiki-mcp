@@ -7,6 +7,9 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
 import { createServer } from './server.js';
+import { ProxyOAuthServerProvider } from '@modelcontextprotocol/sdk/server/auth/providers/proxyProvider.js';
+import { mcpAuthRouter } from '@modelcontextprotocol/sdk/server/auth/router.js';
+import { proxyMediawikiOauth } from './proxyMediawiki.js';
 
 const app = express();
 
@@ -81,6 +84,15 @@ const handleSessionRequest = async ( req: Request, res: Response ): Promise<void
 app.get( '/mcp', handleSessionRequest );
 
 app.delete( '/mcp', handleSessionRequest );
+
+if(process.env.MCP_PROXY_OAUTH_BASE&&process.env.MCP_PROXY_OAUTH_ISSUER&&process.env.MCP_PROXY_OAUTH_RESOURCE){ 
+	proxyMediawikiOauth( app, {
+		mediawikiBase: process.env.MCP_PROXY_OAUTH_BASE,
+		issuer: process.env.MCP_PROXY_OAUTH_ISSUER,
+		resource: process.env.MCP_PROXY_OAUTH_RESOURCE
+	} );
+}
+
 
 const PORT = process.env.PORT || 3000;
 app.listen( PORT as any,"0.0.0.0", () => {

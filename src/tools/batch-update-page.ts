@@ -80,15 +80,13 @@ async function handleBatchUpdatePageTool(
 	
 	try {
 		let [cookies] = getReqHeaders(req);
-		let token = await tokenManager.getToken(server, cookies);
-		
-		if (!token[0]) {
-			throw new Error(`Cannot fetch token with cookie: ${cookies}`);
+		let {csrftoken,cookies:newCookies } = await tokenManager.getToken(server,cookies)
+		if(!csrftoken){
+			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
 		}
-		if (token[1]) {
-			cookies = token[1];
+		if(newCookies){
+			cookies = newCookies;
 		}
-
 		// Process each page sequentially to avoid rate limiting
 		for (const page of pages) {
 			try {
@@ -100,7 +98,7 @@ async function handleBatchUpdatePageTool(
 					summary: page.comment || 'Updated via MCP (batch)',
 					format: 'json',
 					contentmodel: page.contentModel || EditContentFormat.wikitext,
-					token: token[0]
+					token: csrftoken
 				};
 				
 				if (section !== undefined) {

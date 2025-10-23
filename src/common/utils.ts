@@ -4,6 +4,9 @@ import FormData from 'form-data';
 import { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
 import { ServerNotification, ServerRequest } from '@modelcontextprotocol/sdk/types.js';
 export type ReqEx = RequestHandlerExtra<ServerRequest, ServerNotification>
+
+export const EnableOauthToken = process.env.MCP_PROXY_OAUTH_BASE&&process.env.MCP_PROXY_OAUTH_ISSUER&&process.env.MCP_PROXY_OAUTH_RESOURCE;
+
 async function fetchCore(
 	baseUrl: string,
 	options?: {

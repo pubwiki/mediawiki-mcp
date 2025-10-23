@@ -8,10 +8,9 @@ import { updatePageTool } from './update-page.js';
 import { getFileTool } from './get-file.js';
 import { createPageTool } from './create-page.js';
 import { loadWorldTool } from './load-world.js';
-import { setTargetWikiTool } from './submit.js';
+import { setTargetWikiTool } from './set-target-wiki.js';
 import { listAllPageTitlesTool } from './list-all-pages-titles.js';
 import { uploadImageTool } from './upload-image.js';
-import { createImageAndUploadToDO } from './create-image-and-upload.js';
 import { batchUpdatePageTool } from './batch-update-page.js';
 import { batchCreatePageTool } from './batch-create-page.js';
 
@@ -20,7 +19,7 @@ const toolRegistrars = [
 	getPageHistoryTool,
 	//searchPageTool,
 	//createImageToWikiTool,
-	createImageAndUploadToDO,
+	//createImageAndUploadToDO,
 	loadWorldTool,
 	listAllPageTitlesTool,
 	//setWikiTool,

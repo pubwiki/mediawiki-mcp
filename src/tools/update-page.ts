@@ -79,14 +79,14 @@ async function handleUpdatePageTool(
 		}
 
 		let [cookies] = getReqHeaders(req);
-		let token = await tokenManager.getToken(server,cookies)
-		if(!token[0]){
+		let {csrftoken,cookies:newCookies } = await tokenManager.getToken(server,cookies)
+		if(!csrftoken){
 			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
 		}
-		if(token[1]){
-			cookies = token[1]
+		if(newCookies){
+			cookies = newCookies;
 		}
-		params.token = token[0];
+		params.token = csrftoken;
 		data = await makeSessionApiRequest(params, server, {"Cookie":cookies});
 	} catch (error) {
 		return {

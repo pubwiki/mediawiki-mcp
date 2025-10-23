@@ -40,7 +40,7 @@ export class TokenManager {
     return hash;
   }
 
-  async fetchToken(server: string, cookie: string):Promise<[string|null,string|null]>{
+  async fetchToken(server: string, cookie: string):Promise<{csrftoken:string|null,cookies:string|null}>{
     try {
 		const response0 = await fetch(`${server}api.php`, {
 			method: 'POST',
@@ -81,17 +81,17 @@ export class TokenManager {
 		}
 
 		const data = await response.json() as EditTokenResponse;
-		return [data.query?.tokens?.csrftoken || null,cookies];
+		return {csrftoken:data.query?.tokens?.csrftoken || null,cookies};
 	} catch (error) {
 		console.error('Error getting edit token:', error);
-		return [null,null];
+		return {csrftoken:null,cookies:null};
 	}
   }
 
   /**
    * 获取 Token
    */
-  async getToken(server: string, cookie: string): Promise<[string|null,string|null]> {
+  async getToken(server: string, cookie: string): Promise<{csrftoken:string|null,cookies:string|null}> {
     const key = this.buildKey(server, cookie);
     const record = this.tokens.get(key);
 
@@ -99,16 +99,16 @@ export class TokenManager {
       const now = Date.now();
       const age = now - record.fetchedAt;
       if (age < this.EXPIRATION) {
-        return [record.token,record.cookie]; // 未过期，直接返回
+        return {csrftoken:record.token,cookies:record.cookie}; // 未过期，直接返回
       }
     }
 
     // 过期或不存在，重新获取
     const newToken = await this.fetchToken(server, cookie);
-    if(newToken[0]&&newToken[1]){
-        this.tokens.set(key, { token: newToken[0], fetchedAt: Date.now(),cookie:newToken[1]});
+    if(newToken.csrftoken&&newToken.cookies){
+        this.tokens.set(key, { token: newToken.csrftoken, fetchedAt: Date.now(),cookie:newToken.cookies});
     }
-    return [newToken[0],newToken[1]];
+    return {csrftoken:newToken.csrftoken,cookies:newToken.cookies};
   }
 }
 
