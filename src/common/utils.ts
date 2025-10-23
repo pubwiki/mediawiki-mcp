@@ -247,6 +247,45 @@ export function getReqHeaders(req:ReqEx):[string]{
 	return [cookies]
 }
 
+/**
+ * Get authentication headers for read operations (only cookies)
+ * @param req - Request object
+ * @returns Object with Cookie header
+ */
+export function getAuthHeaders(req: ReqEx): { Cookie: string } {
+	const [cookies] = getReqHeaders(req);
+	return { Cookie: cookies };
+}
+
+/**
+ * Get authentication headers with CSRF token for write operations
+ * @param req - Request object
+ * @param server - Wiki server URL
+ * @param tokenManager - Token manager instance
+ * @returns Object with Cookie header and the csrf token
+ */
+export async function getAuthHeadersWithToken(
+	req: ReqEx,
+	server: string,
+	tokenManager: { getToken: (server: string, cookies: string) => Promise<{ csrftoken: string | null; cookies: string | null }> }
+): Promise<{ headers: { Cookie: string }; token: string }> {
+	let [cookies] = getReqHeaders(req);
+	const { csrftoken, cookies: newCookies } = await tokenManager.getToken(server, cookies);
+	
+	if (!csrftoken) {
+		throw new Error(`Cannot fetch token with cookie: ${cookies}`);
+	}
+	
+	if (newCookies) {
+		cookies = newCookies;
+	}
+	
+	return {
+		headers: { Cookie: cookies },
+		token: csrftoken
+	};
+}
+
 export function parseWikiUrl( wikiUrl: string ): string {
 	const url = new URL( wikiUrl );
 	return `${ url.protocol }//${ url.host }/`;

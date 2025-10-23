@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { getReqHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
+import { getAuthHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
 import type { MwRestApiGetPageHistoryResponse, MwRestApiRevisionObject } from '../types/mwRestApi.js';
 
 export function getPageHistoryTool( server: McpServer ): RegisteredTool {
@@ -49,11 +49,11 @@ async function handleGetPageHistoryTool(
 
 	let data: MwRestApiGetPageHistoryResponse | null = null;
 	try {
-		const [cookies] = getReqHeaders(req);
+		const headers = getAuthHeaders(req);
 		data = await makeRestGetRequest<MwRestApiGetPageHistoryResponse>(
 			`/v1/page/${ encodeURIComponent( title ) }/history`,
 			server,
-			{"Cookie":cookies},
+			headers,
 			params
 		);
 	} catch ( error ) {

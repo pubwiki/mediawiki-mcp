@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { getReqHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
+import { getAuthHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
 import type { MwRestApiFileObject } from '../types/mwRestApi.js';
 
 export function getFileTool( server: McpServer ): RegisteredTool {
@@ -26,8 +26,8 @@ export function getFileTool( server: McpServer ): RegisteredTool {
 async function handleGetFileTool( req:ReqEx, server:string, title: string ): Promise< CallToolResult > {
 	let data: MwRestApiFileObject | null = null;
 	try {
-		const [cookies, ] = getReqHeaders(req);
-		data = await makeRestGetRequest<MwRestApiFileObject>( `/v1/file/${ encodeURIComponent( title ) }`, server , {"Cookie":cookies} );
+		const headers = getAuthHeaders(req);
+		data = await makeRestGetRequest<MwRestApiFileObject>( `/v1/file/${ encodeURIComponent( title ) }`, server , headers );
 	} catch ( error ) {
 		return {
 			content: [

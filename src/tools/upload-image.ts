@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { makeSessionUploadRequest, getPageUrl, ReqEx, getReqHeaders, parseWikiUrl } from '../common/utils.js';
+import { makeSessionUploadRequest, getPageUrl, ReqEx, getAuthHeadersWithToken, parseWikiUrl } from '../common/utils.js';
 import fetch from 'node-fetch';
 import { tokenManager } from '../common/tokenManager.js';
 
@@ -42,14 +42,9 @@ async function handleUploadImageTool(
 			throw new Error(`Failed to download image: ${resp.status} ${resp.statusText}`);
 		}
 		const buffer = await resp.buffer();
-		let [cookies] = getReqHeaders(req);
-		const token = await tokenManager.getToken(server,cookies)
-		if(!token[0]){
-			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
-		}
-		if(token[1]){
-			cookies = token[1]
-		}
+		
+		const { headers, token } = await getAuthHeadersWithToken(req, server, tokenManager);
+		
 		// 使用 session API 上传文件
 		data = await makeSessionUploadRequest(
 			{
@@ -63,10 +58,10 @@ async function handleUploadImageTool(
 					value: buffer,
 					options: { filename }
 				},
-				token:token[0]
+				token: token
 			},
 			server,
-			{"Cookie":cookies}
+			headers
 		);
 	} catch (error) {
 		return {

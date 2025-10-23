@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { getReqHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
+import { getAuthHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
 import type { MwRestApiPageObject } from '../types/mwRestApi.js';
 
 export enum ContentFormat {
@@ -48,11 +48,11 @@ async function handleGetPageTool(req: ReqEx, server: string, title: string, cont
 
 	let data: MwRestApiPageObject | null = null;
 	try {
-		const [cookies,] = getReqHeaders(req);
+		const headers = getAuthHeaders(req);
 		data = await makeRestGetRequest<MwRestApiPageObject>(
 			`/v1/page/${encodeURIComponent(title)}${subEndpoint}`,
 			server,
-			{ "Cookie": cookies }
+			headers
 		);
 	} catch (error) {
 		return {

@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { getReqHeaders, makeSessionApiRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
+import { getAuthHeaders, makeSessionApiRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
 
 interface MwActionAllPagesResponse {
 	query?: {
@@ -69,7 +69,7 @@ export async function handleListAllPageTitlesTool(
 ): Promise<CallToolResult> {
 	let data: MwActionAllPagesResponse | null = null;
 	try {
-		const [cookies] = getReqHeaders(req);
+		const headers = getAuthHeaders(req);
 		data = await makeSessionApiRequest(
 			{
 				action: 'query',
@@ -80,7 +80,7 @@ export async function handleListAllPageTitlesTool(
 				format: 'json'
 			},
 			server,
-			{ Cookie: cookies }
+			headers
 		);
 	} catch (error) {
 		return {

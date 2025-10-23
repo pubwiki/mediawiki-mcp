@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, ServerNotification, ServerRequest, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { makeSessionApiRequest, getPageUrl, getReqHeaders, ReqEx, parseWikiUrl } from '../common/utils.js';
+import { makeSessionApiRequest, getPageUrl, getAuthHeadersWithToken, ReqEx, parseWikiUrl } from '../common/utils.js';
 import { tokenManager } from '../common/tokenManager.js';
 import { EditContentFormat } from '../common/contentModal.js';
 
@@ -39,14 +39,8 @@ async function handleCreatePageTool(
 ): Promise<CallToolResult> {
 	let data: any = null;
 	try {
-		let [cookies] = getReqHeaders(req);
-		let {csrftoken,cookies:newCookies } = await tokenManager.getToken(server,cookies)
-		if(!csrftoken){
-			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
-		}
-		if(newCookies){
-			cookies = newCookies;
-		}
+		const { headers, token } = await getAuthHeadersWithToken(req, server, tokenManager);
+		
 		data = await makeSessionApiRequest( {
 			action: 'edit',
 			title: title,
@@ -54,9 +48,9 @@ async function handleCreatePageTool(
 			summary: comment || 'Created via MCP',
 			createonly: 'true', // This ensures we only create, not update existing
 			contentmodel: contentModel || 'wikitext',
-			token: csrftoken,
+			token: token,
 			format: 'json'
-		},server,{"Cookie":cookies});
+		}, server, headers);
 		
 	} catch ( error ) {
 		return {

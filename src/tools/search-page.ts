@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { getReqHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
+import { getAuthHeaders, makeRestGetRequest, parseWikiUrl, ReqEx } from '../common/utils.js';
 import type { MwRestApiSearchPageResponse, MwRestApiSearchResultObject } from '../types/mwRestApi.js';
 
 export function searchPageTool( server: McpServer ): RegisteredTool {
@@ -30,11 +30,11 @@ export function searchPageTool( server: McpServer ): RegisteredTool {
 async function handleSearchPageTool( req:ReqEx, server:string,query: string, limit?: number ): Promise< CallToolResult > {
 	let data: MwRestApiSearchPageResponse | null = null;
 	try {
-		const [cookies,] = getReqHeaders(req)
+		const headers = getAuthHeaders(req);
 		data = await makeRestGetRequest<MwRestApiSearchPageResponse>(
 			'/v1/search/page',
 			server,
-			{"Cookie":cookies},
+			headers,
 			{ q: query, ...( limit ? { limit: limit.toString() } : {} ) }
 		);
 	} catch ( error ) {

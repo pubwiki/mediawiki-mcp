@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { makeSessionApiRequest, getPageUrl, ReqEx, getReqHeaders, parseWikiUrl } from '../common/utils.js';
+import { makeSessionApiRequest, getPageUrl, ReqEx, getAuthHeadersWithToken, parseWikiUrl } from '../common/utils.js';
 import { tokenManager } from '../common/tokenManager.js';
 import { EditContentFormat } from '../common/contentModal.js';
 
@@ -79,14 +79,8 @@ async function handleBatchUpdatePageTool(
 	const results: UpdateResult[] = [];
 	
 	try {
-		let [cookies] = getReqHeaders(req);
-		let {csrftoken,cookies:newCookies } = await tokenManager.getToken(server,cookies)
-		if(!csrftoken){
-			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
-		}
-		if(newCookies){
-			cookies = newCookies;
-		}
+		const { headers, token } = await getAuthHeadersWithToken(req, server, tokenManager);
+		
 		// Process each page sequentially to avoid rate limiting
 		for (const page of pages) {
 			try {
@@ -98,7 +92,7 @@ async function handleBatchUpdatePageTool(
 					summary: page.comment || 'Updated via MCP (batch)',
 					format: 'json',
 					contentmodel: page.contentModel || EditContentFormat.wikitext,
-					token: csrftoken
+					token: token
 				};
 				
 				if (section !== undefined) {
@@ -108,7 +102,7 @@ async function handleBatchUpdatePageTool(
 				const data: MwActionEditResponse = await makeSessionApiRequest(
 					params,
 					server,
-					{ "Cookie": cookies }
+					headers
 				);
 
 				if (data.error) {

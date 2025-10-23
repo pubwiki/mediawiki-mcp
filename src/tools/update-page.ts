@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { McpServer, RegisteredTool } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult, TextContent, ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 /* eslint-enable n/no-missing-import */
-import { makeSessionApiRequest, getPageUrl, ReqEx, getReqHeaders, parseWikiUrl } from '../common/utils.js';
+import { makeSessionApiRequest, getPageUrl, ReqEx, getAuthHeadersWithToken, parseWikiUrl } from '../common/utils.js';
 import { tokenManager } from '../common/tokenManager.js';
 import { EditContentFormat } from '../common/contentModal.js';
 
@@ -66,28 +66,22 @@ async function handleUpdatePageTool(
 ): Promise<CallToolResult> {
 	let data: MwActionEditResponse | null = null;
 	try {
+		const { headers, token } = await getAuthHeadersWithToken(req, server, tokenManager);
+		
 		const params: Record<string, string> = {
 			action: 'edit',
 			title,
 			text: source,
 			summary: comment || 'Updated via MCP',
 			format: 'json',
-			contentmodel: contentModel || EditContentFormat.wikitext
+			contentmodel: contentModel || EditContentFormat.wikitext,
+			token: token
 		};
 		if (section !== undefined) {
 			params.section = String(section);
 		}
 
-		let [cookies] = getReqHeaders(req);
-		let {csrftoken,cookies:newCookies } = await tokenManager.getToken(server,cookies)
-		if(!csrftoken){
-			throw new Error(`Cannot fetch token with cookie: ${cookies}`)
-		}
-		if(newCookies){
-			cookies = newCookies;
-		}
-		params.token = csrftoken;
-		data = await makeSessionApiRequest(params, server, {"Cookie":cookies});
+		data = await makeSessionApiRequest(params, server, headers);
 	} catch (error) {
 		return {
 			content: [
