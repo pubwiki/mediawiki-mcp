@@ -168,10 +168,22 @@ export async function makeSessionApiRequest(
 
 	if ( !response.ok ) {
 		const errorBody = await response.text().catch( () => 'Could not read error response body' );
-		throw new Error( `HTTP error! status: ${ response.status } for URL: ${ response.url }. Response: ${ errorBody }` );
+		const e = `HTTP error! status: ${ response.status } for URL: ${ response.url }. Response: ${ errorBody }`
+		console.log(e);
+		throw new Error( e );
+	}
+	const text = await response.text();
+
+	try{
+		return JSON.parse(text);
+	} catch(e){
+		return {
+			error:e,
+			raw:text
+		}
 	}
 
-	return await response.json();
+	
 }
 
 /**
@@ -239,49 +251,88 @@ export function getPageUrl(wikiServer:string, title: string ): string {
 	return `${wikiServer}wiki/${ encodeURIComponent( title ) }`;
 }
 
-export function getReqHeaders(req:ReqEx):[string]{
-	let cookies = req.requestInfo?.headers["reqcookie"] ?? "";
+export function getReqHeaders(req:ReqEx):[string | undefined, string | undefined]{
+	let cookies = req.requestInfo?.headers?.["reqcookie"];
 	if (Array.isArray(cookies)) {
 		cookies = cookies[0];
 	}
-	return [cookies]
+	const cookieHeader = typeof cookies === 'string' && cookies.length > 0 ? cookies : undefined;
+
+	let bearer = req.requestInfo?.headers?.["authorization"];
+	if (Array.isArray(bearer)) {
+		bearer = bearer[0];
+	}
+	const bearerHeader = typeof bearer === 'string' && bearer.length > 0 ? bearer : undefined;
+
+	return [cookieHeader, bearerHeader];
 }
 
 /**
- * Get authentication headers for read operations (only cookies)
+ * Get authentication headers for read operations
+ * Supports both Cookie and Bearer token authentication
  * @param req - Request object
- * @returns Object with Cookie header
+ * @returns Object with Cookie and/or Authorization header
  */
-export function getAuthHeaders(req: ReqEx): { Cookie: string } {
-	const [cookies] = getReqHeaders(req);
-	return { Cookie: cookies };
+export function getAuthHeaders(req: ReqEx): Record<string, string> {
+	const [cookies, bearer] = getReqHeaders(req);
+	const headers: Record<string, string> = {};
+	
+	if (cookies) {
+		headers.Cookie = cookies;
+	}
+	if (bearer) {
+		headers.Authorization = bearer;
+	}
+	
+	return headers;
 }
 
 /**
  * Get authentication headers with CSRF token for write operations
+ * Supports both Cookie+CSRF and Bearer token authentication
  * @param req - Request object
  * @param server - Wiki server URL
  * @param tokenManager - Token manager instance
- * @returns Object with Cookie header and the csrf token
+ * @returns Object with authentication headers and optional CSRF token
  */
 export async function getAuthHeadersWithToken(
 	req: ReqEx,
 	server: string,
-	tokenManager: { getToken: (server: string, cookies: string) => Promise<{ csrftoken: string | null; cookies: string | null }> }
-): Promise<{ headers: { Cookie: string }; token: string }> {
-	let [cookies] = getReqHeaders(req);
-	const { csrftoken, cookies: newCookies } = await tokenManager.getToken(server, cookies);
-	
+	tokenManager: { getToken: (server: string, auth: { cookies?: string; bearer?: string }) => Promise<{ csrftoken: string | null; cookies: string | null }> }
+): Promise<{ headers: Record<string, string>; token: string }> {
+	const [cookies, bearer] = getReqHeaders(req);
+
+	if (bearer) {
+		const { csrftoken } = await tokenManager.getToken(server, { bearer });
+		if (!csrftoken) {
+			throw new Error('Cannot fetch token with bearer authorization header');
+		}
+		return {
+			headers: { Authorization: bearer },
+			token: csrftoken
+		};
+	}
+
+	if (!cookies) {
+		return {
+			headers: {},
+			token: '+\\'
+		}
+	}
+
+	const { csrftoken, cookies: updatedCookies } = await tokenManager.getToken(server, { cookies });
+
 	if (!csrftoken) {
 		throw new Error(`Cannot fetch token with cookie: ${cookies}`);
 	}
-	
-	if (newCookies) {
-		cookies = newCookies;
+
+	const finalCookies = updatedCookies ?? cookies;
+	if (!finalCookies) {
+		throw new Error('Cannot determine cookie for authenticated request');
 	}
-	
+
 	return {
-		headers: { Cookie: cookies },
+		headers: { Cookie: finalCookies },
 		token: csrftoken
 	};
 }

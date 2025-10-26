@@ -49,14 +49,6 @@ docker compose up
 创建 `.mcp.env` 文件并配置以下环境变量：
 
 ```bash
-# ModelScope API 密钥（用于 AI 图像生成）
-MODELSCOPE_API_KEY=your_modelscope_api_key
-
-# 【可选的】 S3 兼容存储配置（用于图像上传和获取公开 URL）
-DO_SPACE_ENDPOINT=your_s3_endpoint
-DO_SPACE_KEY=your_access_key
-DO_SPACE_BUCKET=your_bucket_name
-DO_SPACE_SECRET=your_secret_key
 
 # 服务端口
 PORT=8080
@@ -69,14 +61,18 @@ MCP_TRANSPORT=http
 
 ### 2. 身份认证配置
 
+此 MCP 服务支持两种认证方式：
+
+#### 方式 1：Cookie + CSRF Token 认证（传统方式）
+
 调用此 MCP 服务时，需要在请求头中附加 MediaWiki 登录 Cookie。
 
-#### 获取登录 Cookie 的步骤：
+##### 获取登录 Cookie 的步骤：
 
 1. 调用 MediaWiki 的 `ClientLogin` API 获取 Cookie
 2. 在调用 MCP 服务时，在请求头中添加 `reqcookie` 字段
 
-#### 完整示例代码：
+##### 完整示例代码：
 
 ```typescript
 import https from "https";
@@ -173,6 +169,35 @@ async function authenticateAndUseMCP() {
 }
 ```
 
+#### 方式 2：Bearer Token 认证（OAuth/API Token）
+
+如果您的 MediaWiki 实例支持 OAuth 或 API Token 认证，可以直接使用 Bearer token。
+
+##### 使用方式：
+
+在调用 MCP 服务时，在请求头中添加 `Authorization` 字段：
+
+```typescript
+const transport = new HTTPClientTransport({
+    url: "http://localhost:3000/mcp",
+    headers: {
+        "Authorization": "Bearer YOUR_ACCESS_TOKEN",  // 使用 Bearer token
+    },
+});
+
+const mcp = await createMcpServer({
+    transport,
+});
+```
+
+##### Bearer Token 认证的优势：
+
+- ✅ **无需 CSRF Token**：Bearer token 本身已经提供了足够的安全性
+- ✅ **更简单**：不需要通过多步骤登录流程获取 Cookie
+- ✅ **更适合 API 调用**：特别适合服务端到服务端的通信
+- ✅ **更好的权限控制**：可以为不同的应用生成不同权限的 token
+
+
 ## 可用工具
 
 本 MCP 服务器提供以下工具：
@@ -187,7 +212,6 @@ async function authenticateAndUseMCP() {
 - `batch-create-page` - 批量创建页面
 - `batch-update-page` - 批量更新页面
 - `upload-image` - 上传图像到 MediaWiki
-- `create-image-and-upload` - AI 生成图像并上传
 - `get-file` - 获取文件信息
 
 ## 开发指南

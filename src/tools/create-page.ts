@@ -40,16 +40,14 @@ async function handleCreatePageTool(
 	let data: any = null;
 	try {
 		const { headers, token } = await getAuthHeadersWithToken(req, server, tokenManager);
-		
 		data = await makeSessionApiRequest( {
 			action: 'edit',
 			title: title,
 			text: source,
 			summary: comment || 'Created via MCP',
-			createonly: 'true', // This ensures we only create, not update existing
 			contentmodel: contentModel || 'wikitext',
-			token: token,
-			format: 'json'
+			format: 'json',
+			token: token
 		}, server, headers);
 		
 	} catch ( error ) {
@@ -85,10 +83,6 @@ async function handleCreatePageTool(
 
 function createPageToolResultSession( server:string,result: any, title: string ): TextContent[] {
 	return [
-		{
-			type: 'text',
-			text: `Page created successfully: ${ getPageUrl(server,title ) }`
-		},
 		{
 			type: 'text',
 			text: [
